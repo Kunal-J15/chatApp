@@ -9,6 +9,7 @@ logIn.onsubmit=async(e)=>{
             password:e.target.password.value
         }
         const res = await axios.post(url,obj);
+        console.log(res.data);
         giveFeed(res.data.msg,"green");
     } catch (error) {
         console.log(error);

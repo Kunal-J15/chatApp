@@ -17,7 +17,8 @@ app.get("/",(req,res)=>{
 
 
 app.use("/user",userRoute);
-sequelize.sync({force:true}).then(()=>{
+sequelize.sync(//{force:true}
+).then(()=>{
     app.listen(3000,()=>{console.log("listning on 3000");})
 }).catch((e)=>{
     console.log("error",e);
