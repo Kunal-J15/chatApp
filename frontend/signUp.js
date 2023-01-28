@@ -1,5 +1,4 @@
 const signIn = document.getElementById("signIn");
-const url ="http://localhost:3000/user/" ;
 signIn.onsubmit=async(e)=>{
     try {
         e.preventDefault();
@@ -9,8 +8,11 @@ signIn.onsubmit=async(e)=>{
         password:e.target.password.value,
         number:e.target.number.value,
     }
-   const res = await axios.post(url,obj);
+   const res = await axios.post("/user",obj);
         giveFeed(res.data.msg,"green");
+        let url = window.location.href.split("/");
+        url[url.length-1] = "login.html";
+        window.location = url.join("/");
     } catch (error) {
         console.log(error);
         console.log(error.response.data.msg);

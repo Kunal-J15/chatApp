@@ -4,8 +4,9 @@ const cors = require("cors")
 const app = express();
 const sequelize = require("./utils/database")
 const User = require("./models/user");
+const Message = require("./models/message");
 const userRoute = require("./routes/user");
-
+const messageRoute = require("./routes/message")
 app.use(cors({
     origin:"*",
 }))
@@ -17,6 +18,10 @@ app.get("/",(req,res)=>{
 
 
 app.use("/user",userRoute);
+app.use('/message',messageRoute);
+User.hasMany(Message);
+Message.belongsTo(User);
+
 sequelize.sync(//{force:true}
 ).then(()=>{
     app.listen(3000,()=>{console.log("listning on 3000");})
