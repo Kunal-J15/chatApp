@@ -9,3 +9,14 @@ function giveFeed(msg,color="red",time=2000) {
         resDiv.innerText="";
     }, time);
 }
+
+function displayMsg(data) {
+    const mesageUl = document.getElementById("messages")
+    for (const msg of data) {
+        const li =  document.createElement("li");
+        li.className = "list-group-item list-group-item-primary";
+        li.innerText = msg.msg;
+        mesageUl.appendChild(li);
+    }
+    
+}

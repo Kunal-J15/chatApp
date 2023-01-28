@@ -1,6 +1,11 @@
 
 const chatForm =document.getElementById("chatForm");
-
+loadData();
+async function  loadData(params) {
+   const messages =  await axios.get('/message');
+   console.log(messages.data.data)
+   displayMsg(messages.data.data)
+}
 chatForm.onsubmit = async(e)=>{
     try {
         e.preventDefault();
