@@ -7,16 +7,23 @@ const User = require("../models/user");
 
 router.route("/")
     .get(isAutherize,async(req,res,next)=>{
-        const messages = await Message.findAll({
+        const messages = Message.findAll({
             include:[{
                 model:User,
                 attributes:["name"]
             }
             ]
             ,
-            attributes:["createdAt","msg","id"]
+            attributes:["createdAt","msg","id"],
+            order:[["createdAt","ASC"]]
         });
-        res.status(200).json({msg:"success",data:messages})
+        const myMsg = req.user.getMessages({
+            attributes:["createdAt","msg","id"],
+            order:[["createdAt","ASC"]]
+        });
+
+        const data = await Promise.all([messages,myMsg]);
+        res.status(200).json({msg:"success",data:data})
     })
     .post(isAutherize,async(req,res,next)=>{
         const {text}=  req.body;
