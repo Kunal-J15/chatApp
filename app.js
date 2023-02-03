@@ -28,9 +28,9 @@ app.use(express.static(__dirname + '/public'));
 app.use("/user",userRoute);
 app.use('/message',messageRoute);
 
-app.get("/",(req,res,next)=>{
-  console.log("in");
-  res.render("index")
+app.get("*",(req,res,next)=>{
+  // console.log("in");
+  res.send("index");
 })
 
 User.hasMany(Message);
