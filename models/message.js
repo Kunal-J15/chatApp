@@ -10,7 +10,12 @@ const Message = sequalize.define("message",{
     msg:{
         type:Sequelize.STRING,
         allowNull:false
-    }
+    },
+    // seenStatus:{
+    //     type:Sequelize.BOOLEAN,
+    //     defaultValue:false
+    //   }
 })
+
 
 module.exports= Message;

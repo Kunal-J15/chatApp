@@ -10,9 +10,8 @@ signIn.onsubmit=async(e)=>{
     }
    const res = await axios.post("/user",obj);
         giveFeed(res.data.msg,"green");
-        let url = window.location.href.split("/");
-        url[url.length-1] = "login.html";
-        window.location = url.join("/");
+        // await axios.get();
+        window.location = "/login.html"
     } catch (error) {
         console.log(error);
         console.log(error.response.data.msg);

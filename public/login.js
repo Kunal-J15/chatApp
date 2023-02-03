@@ -10,9 +10,11 @@ logIn.onsubmit=async(e)=>{
         const res = await axios.post("/user/login",obj);
         localStorage.setItem("token",JSON.stringify(res.data));
         giveFeed(res.data.msg,"green");
-        let url = window.location.href.split("/");
-        url[url.length-1] = "chat.html";
-        window.location = url.join("/");
+        // await axios.get();
+        window.location = "/index.html";
+        // let url = window.location.href.split("/");
+        // url[url.length-1] = "index.html";
+        // window.location = url.join("/");
     } catch (error) { 
         console.log(error);
         console.log(error.response.data.msg);

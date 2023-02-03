@@ -1,4 +1,4 @@
-axios.defaults.headers.common['Authorization'] = localStorage.getItem("token")&& JSON.parse(localStorage.getItem("token")).id;
+axios.defaults.headers.common['Authorization'] = localStorage.getItem("token") && JSON.parse(localStorage.getItem("token")).id;
 axios.defaults.baseURL = 'http://localhost:3000';
 
 function giveFeed(msg,color="red",time=2000) {
@@ -10,7 +10,7 @@ function giveFeed(msg,color="red",time=2000) {
     }, time);
 }
 
-function displayMsg(data,myMsg) {
+function displayMsg(data=JSON.parse(localStorage.getItem("messages")),myMsg=JSON.parse(localStorage.getItem("myMsg"))) {
     const mesageUl = document.getElementById("messages");
     mesageUl.innerHTML=""
     let i=null;
@@ -20,7 +20,6 @@ function displayMsg(data,myMsg) {
             const my = myMsg[l];
             if(my.id===msg.id){
                 i=l;
-                console.log("break");
                 break;
             }
         }
@@ -42,7 +41,7 @@ function displayMsg(data,myMsg) {
         
         li.innerText = msg.msg;
         const div = document.createElement("sub");
-        const time = document.createTextNode(msg.createdAt+"  "+msg.user.name);
+        const time = document.createTextNode(msg.createdAt+"  "+msg.sender.name);
         const br = document.createElement("br");
         div.className = "fw-lighter d-block";
         div.appendChild(time);
