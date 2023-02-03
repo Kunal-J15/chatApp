@@ -29,8 +29,8 @@ app.use("/user",userRoute);
 app.use('/message',messageRoute);
 
 app.get("*",(req,res,next)=>{
-  // console.log("in");
-  res.send("index");
+  console.log("in");
+  res
 })
 
 User.hasMany(Message);
@@ -58,37 +58,6 @@ User.belongsToMany(User, {
     foreignKey: 'userId',
     otherKey: 'friendId'
   });
-
-  // User.belongsToMany(User, {
-  //   as: 'sender',
-  //   through: 'friendship',
-  //   foreignKey: 'senderId',
-  //   otherKey: 'friendId'
-  // });
-
-//   Message.belongsTo(User,{through:"Conversation"});
-// User.belongsTo(Message,{through:"Conversation"});
-
-// Group.belongsTo(User, { as: 'admin', foreignKey: 'adminId' });
-
-// Group.hasMany(User);
-// User.belongsToMany(Group, { through: 'UserGroup' });
-
-// Group.hasMany(Message);
-// Message.belongsTo(Group);
-
-// User.belongsToMany(User, {
-//     as: 'friends',
-//     through: 'friendship',
-//     foreignKey: 'userId',
-//     otherKey: 'friendId'
-//   });
-
-// async function name(params) {
-//   await sequelize.query('ALTER TABLE friendship DROP FOREIGN KEY friendship_ibfk_1');
-//  await sequelize.sync({ force: true });
-// };
-// name();
 
 var option// = {force: true}
 sequelize.sync(option
