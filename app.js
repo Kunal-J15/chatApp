@@ -103,7 +103,7 @@ sequelize.sync(option
          await user1.save();await user2.save();await user3.save();await user4.save();
         const ans2 = await Promise.all([user1.addFriend(user2.id),user1.addFriend(user3.id),user1.addFriend(user4.id),user2.addFriend(user1.id),user3.addFriend(user4.id),user4.addFriend(user3.id)]);
     }
-    app.listen(3000,()=>{console.log("listning on 3000");})
+    app.listen(process.env.PORT,()=>{console.log("listning on 3000");})
 }).catch((e)=>{
     console.log("error",e);
 })
