@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const router = express.Router({ mergeParams: true });
 const User = require("../models/user")
 const { generateAccessToken } = require("../utils/utils")
-const { isAutherize, isGroupAdmin, isAuthenticGroup} = require("../utils/utils.js");
+const { isAutherize, isGroupAdmin, isAuthenticGroup,isFriendsOfAdmin,isMembersOfGroup } = require("../utils/utils.js");
 const salt = 10;
 const { Op } = require("sequelize");
 
@@ -80,7 +80,8 @@ router.route("/group")
         })
         .post(isAutherize, async (req, res, next) => {
             const { name,description } = req.body;
-            await req.user.createGroup({name,description,adminId:parseInt(req.user.id)});
+            let grp = await req.user.createGroup({name,description});
+            grp =  await grp.addAdmin(req.user.id);
             return res.status(200).json({ msg: "group created with name "+ name });
         })
         .delete(isAutherize,isAuthenticGroup,isGroupAdmin,async (req, res, next) => {
@@ -95,13 +96,14 @@ router.route("/group/member")
             include:[]
         })
         const filteredMems = mems.map(friend => {
-            const { userGroup, ...filteredMem } = friend.toJSON();
+            const { userGroup,admin, ...filteredMem } = friend.toJSON();
+            filteredMem.isAdmin = req.admins.includes(filteredMem.id)
             return filteredMem;
         });
 
-        res.status(200).json({members:filteredMems,adminId:req.group.adminId});
+        res.status(200).json({members:filteredMems});
     })
-    .post(isAutherize,isAuthenticGroup,isGroupAdmin,async(req,res,next)=>{
+    .post(isAutherize,isAuthenticGroup,isGroupAdmin,isFriendsOfAdmin,async(req,res,next)=>{
         let {removeList,addList} = req.body;
         const l = [];
         // console.log(removeList,typeof(removeList),typeof([]));
@@ -114,6 +116,18 @@ router.route("/group/member")
         }
         await Promise.all(l);
         res.status(200).json({msg:"group edited succesfully"})
+       
+    })
+    router.post("/group/addAdmin",isAutherize,isAuthenticGroup,isGroupAdmin,isMembersOfGroup,async(req,res,next)=>{
+        let {adminList} = req.body;
+        const l = [];
+        // console.log(removeList,typeof(removeList),typeof([]));
+
+        for (const u of adminList) {
+            l.push(req.group.addAdmin(parseInt(u)));
+        }
+        await Promise.all(l);
+        res.status(200).json({msg:"Admin's added group edited succesfully"})
        
     })
 

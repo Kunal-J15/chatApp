@@ -94,7 +94,8 @@ router.route("/")
                     order: [["createdAt", "DESC"]]
                 })
             }
-            res.status(200).json({ msg: "success", data: [messages, myMsg], isAdmin: req.group.adminId===req.user.id })
+            const admins = req.group.admin.map(e=>e.id);
+            res.status(200).json({ msg: "success", data: [messages, myMsg], isAdmin: admins.includes(req.user.id) });
             
         
         })

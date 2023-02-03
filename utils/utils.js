@@ -56,11 +56,19 @@ module.exports.isAuthenticGroup = async (req, res, next) => {
       where: {
         id: convId
       },
+      include: [
+        {
+            model: User,
+            as: "admin",
+            attributes: ["id"]
+        },
+    ],
       limit: 1,
-      attributes: ["name", "id", "description", "adminId",]
+      attributes: ["name", "id", "description",]
     });
     if (group[0]) {
       req.group = group[0];
+      req.admins = req.group.admin.map(e=>e.id);
       return next();
     } else return res.status(403).json({ msg: "not a member of group" })
 
@@ -69,7 +77,7 @@ module.exports.isAuthenticGroup = async (req, res, next) => {
 }
 
 module.exports.isGroupAdmin = async (req, res, next) => {
-  if (req.group.adminId === req.user.id) return next();
+  if (req.admins.includes(req.user.id)) return next();
   return res.status(401).json({ msg: "Not a Group Admin" });
 }
 module.exports.friendNotificationUpdate  = async (req, res, next) => { // to reduce sql calls but handled by frontEnd
@@ -112,4 +120,42 @@ module.exports.groupNotificationUpdate = async (req, res, next) => { // to reduc
     } else return res.status(403).json({ msg: "something went wrong/ not a member of group" });
   }
   return next()
+}
+
+module.exports.isFriendsOfAdmin =async (req, res, next) => {
+  const {addList} = req.body;
+  if(addList){
+    let friends = await req.user.getFriends({
+      attributes:["id"]
+    });
+    friends = friends.map(e=>e.id);
+  
+    if(addList){
+      for (const mem of addList) {
+        if(!friends.includes(parseInt(mem))) return res.status(403).json({msg:"Not a friend of admin"})
+      }
+    }
+  }
+
+  next();
+}
+
+module.exports.isMembersOfGroup = async (req, res, next) => {
+  let mems = await req.group.getUsers({
+    attributes:["id"]
+  });
+  mems = mems.map(e=>e.id);
+  const {adminList,removeList} = req.body;
+  if(adminList){
+    for (const mem of adminList) {
+      if(!mems.includes(parseInt(mem))) return res.status(403).json({msg:"Not a member of group"})
+    }
+  }
+  
+  if(removeList){
+    for (const mem of removeList) {
+      if(!mems.includes(parseInt(mem))) return res.status(403).json({msg:"Not a member of group in remove list"})
+    }
+  }
+  next();
 }

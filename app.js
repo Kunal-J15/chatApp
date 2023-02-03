@@ -44,7 +44,7 @@ Message.belongsTo(User, {
     as: "sender", 
     foreignKey: "userId"
   }); 
-Group.belongsTo(User, { as: 'admin', foreignKey: 'adminId' });
+Group.belongsToMany(User, { through:'adminGroup',as:"admin" ,foreignKey: 'adminId' });
 
 Group.belongsToMany(User,{ through: 'userGroup' });
 User.belongsToMany(Group, { through: 'userGroup',onDelete:"CASCADE" });
@@ -90,7 +90,7 @@ User.belongsToMany(User, {
 // };
 // name();
 
-var option //= {force: true}
+var option// = {force: true}
 sequelize.sync(option
 ).then(async()=>{
     if(option){

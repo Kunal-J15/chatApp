@@ -16,13 +16,13 @@ const Group = sequelize.define("group",{
     description:{
         type:Sequelize.STRING
     },
-    adminId:{
-        type:Sequelize.INTEGER,
-        references:{
-            model:"Users",
-            key:"id"
-        }
-    },
+    // adminId:{
+    //     type:Sequelize.INTEGER,
+    //     references:{
+    //         model:"Users",
+    //         key:"id"
+    //     }
+    // },
 })
 
 module.exports = Group;

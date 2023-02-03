@@ -1,9 +1,6 @@
 
 function checkLogin() {
     if(!localStorage.getItem("token")){
-        // let url = window.location.href.split("/");
-        // url[url.length-1] = "login.html";
-        // window.location = url.join("/");
         window.location = "/login.html";
     }
 }
@@ -26,8 +23,6 @@ var chatType, convId,conv;
 
 
 const listListner = (e)=>{
-    // console.log(e.target.classList);
-    
     if(e.target.id != "list" && convId!= e.target.id ){
         chatType = "ooo";
         chatDiv.style="";
@@ -41,8 +36,8 @@ const listListner = (e)=>{
         
         preData=[];
         preMy=[];
-        const mesageUl = document.getElementById("messages");
-        mesageUl.innerHTML="";
+        messages.innerHTML="";
+        chatNav.innerHTML = ""
         loadData(e.target);
     }
     // 
@@ -59,6 +54,7 @@ gList.addEventListener("click",(e)=>{
         conv = e.target;
         conv.classList.add("text-success")
 
+        messages.innerHTML= ""
         chatDiv.style="";
         chatType = "group";
         convId = e.target.id;
@@ -118,7 +114,6 @@ async function  loadData(ele,gFirst) {
 
 async function loadFriendList() { //........OK..........
     try {
-        // console.log(convId,chatType);
         const friends = await axios.get("/user/friend");
         list.innerHTML=""
         for (const friend of friends.data.friends) {
@@ -143,12 +138,10 @@ async function  loadGroupList() {
     try {
         const groups = await axios.get("/user/group");
         gList.innerHTML="";
-        // console.log(groups.data.groups);
         for (const group of groups.data.groups) {
             const li = document.createElement("li");
             li.classList = "nav-item nav-link border border-secondary text-center rounded-pill m-1 groups";
             if(chatType==="group" && group.id == convId )li.classList += (" text-success");  
-           li.isAdmin =  group.adminId ;
             if(group.notification){
                 li.classList +=" text-danger";
                 if(chatType==="group" && group.id == convId) loadData(li)
@@ -164,7 +157,7 @@ async function  loadGroupList() {
 }
 
 function adminRights(params) {
-    chatNav.innerHTML = "";
+        chatNav.innerHTML = "";
         const addMem = document.createElement("button");
         addMem.classList = "btn btn-sm btn-warning d-flex justify-content-end m-1";
         addMem.innerText = "Edit Group";
@@ -173,8 +166,13 @@ function adminRights(params) {
         dltBtn.classList = "btn btn-sm btn-danger d-flex justify-content-end m-1";
         dltBtn.innerText = "Delete Group";
         chatNav.prepend(dltBtn);
+        const adminBtn = document.createElement("button");
+        adminBtn.classList = "btn btn-sm btn-warning d-flex justify-content-end m-1";
+        adminBtn.innerText = "Add Admin";
+        chatNav.prepend(adminBtn);
         dltBtn.addEventListener("click",deleteGroup)
         addMem.addEventListener("click",addMember);
+        adminBtn.addEventListener("click",addAdmin);
 }
 
 async function deleteGroup(params) {
@@ -226,7 +224,8 @@ async function addMember(e) {
             btn.classList = "btn btn-secondary m-2";
             btn.innerText = member.name;
             btn.id = member.id;
-            if(memebers.data.adminId != member.id){
+            console.log(memebers.data.adminId, member.id);
+            if(!member.isAdmin){
                 btn.addEventListener("click",(e)=>{
                     e.target.classList.toggle("btn-danger");
                     e.target.classList.toggle("removeMemGroup");
@@ -241,10 +240,52 @@ async function addMember(e) {
     e.target.addEventListener("click",editGroup)
     } catch (error) {
         
+    }  
+}
+async function addAdmin(e) {
+    try {
+        const memebers = await axios.get(`/user/group/member?chatType=${chatType}&&convId=${convId}`);
+    messages.innerHTML = '<h4>Group members</h4><h6>click on member to add as admin of group</h6><div id="groupsMembers" class="mt-5"></div><hr>';
+    const groupsMembers = document.getElementById("groupsMembers");
+    for (const member of memebers.data.members) {
+        const btn = document.createElement("button");
+        btn.classList = "btn btn-secondary m-2";
+        btn.innerText = member.name;
+        btn.id = member.id;
+        if(!member.isAdmin){
+            btn.addEventListener("click",(e)=>{
+                e.target.classList.toggle("btn-warning");
+                e.target.classList.toggle("addAdminGroup");
+            })
+        }else btn.classList = "btn btn-warning m-2";
+        groupsMembers.appendChild(btn);
+    }
+    e.target.innerText = "Confirm";
+    e.target.removeEventListener("click",addAdmin);
+    e.target.addEventListener("click",addAdminGroup);
+    } catch (error) {
+        console.log(error);
     }
     
-   
 }
+
+async function addAdminGroup(e) {
+    try {
+        let adminList =[ ...document.querySelectorAll(".addAdminGroup")];
+    // let removeList = [...document.querySelectorAll(".removeMemGroup")];
+    adminList = adminList.map(e=>e.id);
+    console.log(adminList);
+    await axios.post("/user/group/addAdmin",{adminList,convId,chatType});
+    messages.innerHTML="";
+    e.target.removeEventListener("click",addAdminGroup);
+    e.target.addEventListener("click",addAdmin);
+    e.target.innerText = "Add Admin";
+    displayMsg();
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 
 async function editGroup(e) {
     try {
@@ -262,8 +303,6 @@ async function editGroup(e) {
     } catch (error) {
         console.log(error);
     }
-    
-
 }
 
 chatForm.onsubmit = async(e)=>{
