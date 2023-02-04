@@ -29,12 +29,12 @@ router.post("/login", async (req, res, next) => {
         const user = await User.findOne({ where: { email } });
         if (user) {
             bcrypt.compare(password, user.password, function (err, result) {
-                if (err) res.status(301).send("something went Wrong");
+                if (err) return res.status(301).send("something went Wrong");
                 if (result) res.status(200).json({ msg: "login succeful", id: generateAccessToken(user.id) });
-                else res.send(401).json({ msg: "invalid email or password" });
+                else return res.send(401).json({ msg: "invalid email or password" });
             });
         }
-        else res.status(403).json({ msg: "User does not exist" })
+        else return res.status(403).json({ msg: "User does not exist" })
     } catch (error) {
         console.log(error);
     }
@@ -112,7 +112,7 @@ router.route("/group/member")
         }
 
         for (const u of addList) {
-            l.push(req.group.addUser(parseInt(u)));
+            l.push(req.group.addUser(u));
         }
         await Promise.all(l);
         res.status(200).json({msg:"group edited succesfully"})
@@ -124,7 +124,7 @@ router.route("/group/member")
         // console.log(removeList,typeof(removeList),typeof([]));
 
         for (const u of adminList) {
-            l.push(req.group.addAdmin(parseInt(u)));
+            l.push(req.group.addAdmin(u));
         }
         await Promise.all(l);
         res.status(200).json({msg:"Admin's added group edited succesfully"})

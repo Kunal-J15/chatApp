@@ -11,10 +11,10 @@ const Message = sequalize.define("message",{
         type:Sequelize.STRING,
         allowNull:false
     },
-    // seenStatus:{
-    //     type:Sequelize.BOOLEAN,
-    //     defaultValue:false
-    //   }
+    isLink:{
+        type:Sequelize.BOOLEAN,
+        defaultValue:false
+      }
 })
 
 

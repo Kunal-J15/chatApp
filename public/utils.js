@@ -1,6 +1,7 @@
 axios.defaults.headers.common['Authorization'] = localStorage.getItem("token") && JSON.parse(localStorage.getItem("token")).id;
 axios.defaults.baseURL = 'http://54.157.128.119';
-
+axios.defaults.baseURL = 'http://localhost:3000';
+// axios.defaults.baseURL = "192.168.0.156";
 function giveFeed(msg,color="red",time=2000) {
     const resDiv = document.getElementById("res");
     resDiv.innerText = msg;
@@ -37,9 +38,29 @@ function displayMsg(data=JSON.parse(localStorage.getItem("messages")),myMsg=JSON
         if(msg.createdAt==(myMsg[i]&&myMsg[i].createdAt)){
             i--// console.log(i);
             li.className = "list-group-item list-group-item-primary mt-1 rounded-pill text-end align-self-end";
+
         }else li.className = "list-group-item list-group-item-secondary mt-1 rounded-pill float-start";
-        
-        li.innerText = msg.msg;
+        console.log(msg.isLink);
+
+        const div2 = document.createElement("div");
+        div2.classList = "container";
+        if(msg.isLink ){
+            if(["png","gif",].includes(msg.msg.slice(-3))|| "jpeg"==msg.msg.slice(-4)){
+            const img = document.createElement("img");
+            img.src = msg.msg;
+            img.alt = msg.msg
+            div2.appendChild(img);
+            }else{
+                const a = document.createElement("a");
+                a.href = msg.msg
+                const arr = msg.msg.split("___");
+                console.log(arr);
+                a.innerText = arr[arr.length-1]
+                div2.appendChild(a);
+            }
+        }else  div2.innerText = msg.msg;
+
+        li.appendChild(div2);
         const div = document.createElement("sub");
         const time = document.createTextNode(msg.createdAt+"  "+msg.sender.name);
         const br = document.createElement("br");

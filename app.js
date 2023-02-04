@@ -15,7 +15,6 @@ const Friendship = require('./models/friendship');
 const UserGroup = require('./models/userGroup');
 
 
-
 app.use(cors({
     origin:"*",
 }))
@@ -29,7 +28,7 @@ app.use("/user",userRoute);
 app.use('/message',messageRoute);
 
 app.get("*",(req,res,next)=>{
-  console.log("in");
+  // console.log("in");
   res
 })
 
@@ -59,7 +58,7 @@ User.belongsToMany(User, {
     otherKey: 'friendId'
   });
 
-var option// = {force: true}
+var option //= {force: true}
 sequelize.sync(option
 ).then(async()=>{
     if(option){

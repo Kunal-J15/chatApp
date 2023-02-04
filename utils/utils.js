@@ -1,5 +1,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+// const multer = require('multer');
+const AWS = require('aws-sdk');
+// const multerS3 = require('multer-s3');
 module.exports.generateAccessToken = function (username) {
   return jwt.sign(username, process.env.JWT_SECRET);
 }
@@ -132,7 +135,7 @@ module.exports.isFriendsOfAdmin =async (req, res, next) => {
   
     if(addList){
       for (const mem of addList) {
-        if(!friends.includes(parseInt(mem))) return res.status(403).json({msg:"Not a friend of admin"})
+        if(!friends.includes(mem)) return res.status(403).json({msg:"Not a friend of admin"})
       }
     }
   }
@@ -148,14 +151,36 @@ module.exports.isMembersOfGroup = async (req, res, next) => {
   const {adminList,removeList} = req.body;
   if(adminList){
     for (const mem of adminList) {
-      if(!mems.includes(parseInt(mem))) return res.status(403).json({msg:"Not a member of group"})
+      if(!mems.includes(mem)) return res.status(403).json({msg:"Not a member of group"})
     }
   }
   
   if(removeList){
     for (const mem of removeList) {
-      if(!mems.includes(parseInt(mem))) return res.status(403).json({msg:"Not a member of group in remove list"})
+      if(!mems.includes(mem)) return res.status(403).json({msg:"Not a member of group in remove list"})
     }
   }
   next();
+}
+
+exports.uploadToAWS = async(data,name)=>{
+  const s3Bucket = new AWS.S3({
+    accessKeyId:process.env.AWS_access,
+    secretAccessKey:process.env.AWS_secret,
+    Bucket:"expensetraker"
+  })
+   var params={
+       Bucket:"expensetraker",
+       Key:name,
+       Body:data,
+       ACL:"public-read"
+   }
+
+   return new Promise ((resolve,reject)=>{
+       s3Bucket.upload(params,(err,AWSres)=>{
+       if(err) reject( err);
+       else { //console.log(AWSres);
+           resolve(AWSres.Location);
+       }
+   })})
 }
