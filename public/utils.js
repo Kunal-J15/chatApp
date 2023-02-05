@@ -1,5 +1,5 @@
 axios.defaults.headers.common['Authorization'] = localStorage.getItem("token") && JSON.parse(localStorage.getItem("token")).id;
-axios.defaults.baseURL = 'http://54.157.128.119';
+// axios.defaults.baseURL = 'http://54.157.128.119';
 axios.defaults.baseURL = 'http://localhost:3000';
 // axios.defaults.baseURL = "192.168.0.156";
 function giveFeed(msg,color="red",time=2000) {
@@ -45,11 +45,18 @@ function displayMsg(data=JSON.parse(localStorage.getItem("messages")),myMsg=JSON
         const div2 = document.createElement("div");
         div2.classList = "container";
         if(msg.isLink ){
-            if(["png","gif",].includes(msg.msg.slice(-3))|| "jpeg"==msg.msg.slice(-4)){
+            if(["png","gif","jpg"].includes(msg.msg.slice(-3))|| "jpeg"==msg.msg.slice(-4)){
             const img = document.createElement("img");
+            img.classList = "img-thumbnail w-25"
             img.src = msg.msg;
             img.alt = msg.msg
             div2.appendChild(img);
+            const a = document.createElement("a");
+                a.href = msg.msg
+                const arr = msg.msg.split("___");
+                console.log(arr);
+                a.innerText = arr[arr.length-1]
+                div2.appendChild(a);
             }else{
                 const a = document.createElement("a");
                 a.href = msg.msg

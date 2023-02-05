@@ -64,7 +64,7 @@ gList.addEventListener("click", (e) => {
         preMy = [];
         loadData(conv, gFirst = true);
     }
-    console.log(e.target.id, convId, chatType);
+    // console.log(e.target.id, convId, chatType);
 })
 
 var preData = JSON.parse(localStorage.getItem("messages"));
@@ -92,14 +92,11 @@ async function loadData(ele, gFirst) {
             messages = await axios.get(`/message/group?lastId=${preData.length && preData[0].id}&&chatType=${chatType}&&convId=${convId}`);
             if (gFirst && messages.data.isAdmin) adminRights();
         }
-        chatType && console.log(messages.data.data);
         if (chatType && messages.data.data[0].length) {
-            console.log("inside");
             const preLength = messages.data.data[0].length + preData.length;
             const preMyLength = messages.data.data[1].length + preMy.length
             preData = messages.data.data[0].concat(preData.slice(0, preLength > 13 ? preLength - messages.data.data[0].length - 1 : preLength));
             preMy = messages.data.data[1].concat(preMy.slice(0, preMyLength > 13 ? preMyLength - messages.data.data[1].length - 1 : preMyLength));
-            console.log(preData[0], preMy);
             localStorage.setItem("messages", JSON.stringify(preData));
             localStorage.setItem("myMsg", JSON.stringify(preMy));
             displayMsg(preData, preMy);
@@ -224,7 +221,6 @@ async function addMember(e) {
                 btn.classList = "btn btn-secondary m-2";
                 btn.innerText = member.name;
                 btn.id = member.id;
-                console.log(memebers.data.adminId, member.id);
                 if (!member.isAdmin) {
                     btn.addEventListener("click", (e) => {
                         e.target.classList.toggle("btn-danger");
@@ -274,7 +270,6 @@ async function addAdminGroup(e) {
         let adminList = [...document.querySelectorAll(".addAdminGroup")];
         // let removeList = [...document.querySelectorAll(".removeMemGroup")];
         adminList = adminList.map(e => e.id);
-        console.log(adminList);
         await axios.post("/user/group/addAdmin", { adminList, convId, chatType });
         messages.innerHTML = "";
         e.target.removeEventListener("click", addAdminGroup);
@@ -293,7 +288,6 @@ async function editGroup(e) {
         let removeList = [...document.querySelectorAll(".removeMemGroup")];
         addList = addList.map(e => e.id);
         removeList = removeList.map(e => e.id);
-        console.log(addList, removeList);
         await axios.post("/user/group/member", { addList, removeList, convId, chatType });
         messages.innerHTML = "";
         e.target.removeEventListener("click", editGroup);
@@ -348,7 +342,7 @@ addFriendForm.onsubmit = async (e) => {
         e.target.number.value = "";
         if (number) {
             const response = await axios.post("/user/friend", { number });
-            console.log(response);
+            // console.log(response);
         }
 
         loadFriendList();
@@ -367,7 +361,7 @@ addGroupForm.onsubmit = async (e) => {
         // console.log(name,description);
         if (name) {
             const response = await axios.post("/user/group", { name, description });
-            console.log(response);
+            // console.log(response);
             loadGroupList();
         }
 
