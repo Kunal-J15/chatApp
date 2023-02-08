@@ -1,7 +1,7 @@
 axios.defaults.headers.common['Authorization'] = localStorage.getItem("token") && JSON.parse(localStorage.getItem("token")).id;
 // axios.defaults.baseURL = 'http://54.157.128.119';
 axios.defaults.baseURL = 'http://localhost:3000';
-// axios.defaults.baseURL = "192.168.0.156";
+// axios.defaults.baseURL = "http://192.168.0.156:3000";
 function giveFeed(msg,color="red",time=2000) {
     const resDiv = document.getElementById("res");
     resDiv.innerText = msg;
@@ -47,7 +47,7 @@ function displayMsg(data=JSON.parse(localStorage.getItem("messages")),myMsg=JSON
         if(msg.isLink ){
             if(["png","gif","jpg"].includes(msg.msg.slice(-3))|| "jpeg"==msg.msg.slice(-4)){
             const img = document.createElement("img");
-            img.classList = "img-thumbnail w-25"
+            img.classList = "img-thumbnail w-50"
             img.src = msg.msg;
             img.alt = msg.msg
             div2.appendChild(img);
@@ -55,6 +55,8 @@ function displayMsg(data=JSON.parse(localStorage.getItem("messages")),myMsg=JSON
                 a.href = msg.msg
                 const arr = msg.msg.split("___");
                 console.log(arr);
+                const br = document.createElement("br");
+                div2.appendChild(br)
                 a.innerText = arr[arr.length-1]
                 div2.appendChild(a);
             }else{

@@ -4,15 +4,16 @@ const { isAutherize, isAuthenticFriend,friendNotificationUpdate , groupNotificat
 const {getFriendMessages,postFriendMessages,getGroupMessages,postGroupMessages} = require("../controllers/message");
 const multer = require('multer');
 const upload = multer();
+const catchAsync = require("../utils/catchAsync");
 
 router.route("/")
-    .get(isAutherize, isAuthenticFriend, friendNotificationUpdate , getFriendMessages)
-    .post(isAutherize,upload.single("files"), isAuthenticFriend,friendNotificationUpdate,postFriendMessages)
+    .get(catchAsync(isAutherize), catchAsync(isAuthenticFriend), catchAsync(friendNotificationUpdate) , catchAsync(getFriendMessages))
+    .post(catchAsync(isAutherize),upload.single("files"), catchAsync(isAuthenticFriend),catchAsync(friendNotificationUpdate),catchAsync(postFriendMessages))
 
 
 
 router.route("/group")
-        .get(isAutherize, isAuthenticGroup,groupNotificationUpdate ,getGroupMessages)
-        .post(isAutherize,upload.single("files"), isAuthenticGroup,groupNotificationUpdate,postGroupMessages)
+        .get(catchAsync(isAutherize), catchAsync(isAuthenticGroup),catchAsync(groupNotificationUpdate) ,catchAsync(getGroupMessages))
+        .post(catchAsync(isAutherize),upload.single("files"), catchAsync(isAuthenticGroup),catchAsync(groupNotificationUpdate),catchAsync(postGroupMessages))
 
 module.exports = router

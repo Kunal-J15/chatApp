@@ -13,7 +13,8 @@ const bcrypt = require('bcrypt');
 const path = require("path")
 const Friendship = require('./models/friendship');
 const UserGroup = require('./models/userGroup');
-
+const ArchiveMessage = require("./models/archiveMessages");
+const job = require("./utils/cronJob");
 
 app.use(cors({
     origin:"*",
@@ -22,6 +23,8 @@ app.use(express.urlencoded({extended:true}));
 app.use(express.json())
 
 app.use(express.static(__dirname + '/public'));
+
+
 
 
 app.use("/user",userRoute);
@@ -58,6 +61,23 @@ User.belongsToMany(User, {
     otherKey: 'friendId'
   });
 
+
+
+  User.hasMany(ArchiveMessage);
+ 
+  ArchiveMessage.belongsTo(User, {
+      as: "receiver",
+      foreignKey: "receiverId"
+    });
+  
+  ArchiveMessage.belongsTo(User, {
+      as: "sender", 
+      foreignKey: "userId"
+    }); 
+    Group.hasMany(ArchiveMessage,{onDelete:"CASCADE"});
+    ArchiveMessage.belongsTo(Group);
+
+    
 var option //= {force: true}
 sequelize.sync(option
 ).then(async()=>{
@@ -67,10 +87,10 @@ sequelize.sync(option
         const user2 = User.build({ name:"ab", email:"ab@gmail.com", password: hash, number:9999999999 });
         const user3 = User.build({ name:"c", email:"c@gmail.com", password: hash, number:123456789 });
         const user4 = User.build({ name:"d", email:"d@gmail.com",password: hash,number:01234567});
-        //snf
-         await user1.save();await user2.save();await user3.save();await user4.save();
+        await user1.save();await user2.save();await user3.save();await user4.save();
         const ans2 = await Promise.all([user1.addFriend(user2.id),user1.addFriend(user3.id),user1.addFriend(user4.id),user2.addFriend(user1.id),user3.addFriend(user4.id),user4.addFriend(user3.id)]);
     }
+    job.start();
     app.listen(process.env.PORT,()=>{console.log("listning on 3000");})
 }).catch((e)=>{
     console.log("error",e);

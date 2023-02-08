@@ -308,6 +308,7 @@ chatForm.onsubmit = async (e) => {
             formData.append('files', fileInput.files[i]);
         // console.log(Array.from(formData.entries()));
         const msg = e.target.msg.value;
+        fileInput.value=null;
 
 
         formData.append("text", msg);
