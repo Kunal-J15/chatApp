@@ -1,6 +1,6 @@
 const sequalize = require("../utils/database");
 const Sequelize =require("sequelize")
-const Message = sequalize.define("message",{
+const Message = sequalize.define("archiveMessage",{
     id:{
         type: Sequelize.INTEGER,
         primaryKey:true,
