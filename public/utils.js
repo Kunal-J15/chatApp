@@ -40,7 +40,7 @@ function displayMsg(data=JSON.parse(localStorage.getItem("messages")),myMsg=JSON
             li.className = "list-group-item list-group-item-primary mt-1 rounded-pill text-end align-self-end";
 
         }else li.className = "list-group-item list-group-item-secondary mt-1 rounded-pill float-start";
-        console.log(msg.isLink);
+        // console.log(msg.isLink);
 
         const div2 = document.createElement("div");
         div2.classList = "container";

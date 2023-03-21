@@ -3,6 +3,8 @@ const User = require('../models/user');
 // const multer = require('multer');
 const AWS = require('aws-sdk');
 // const multerS3 = require('multer-s3');
+const io = require("./socket");
+
 module.exports.generateAccessToken = function (username) {
   return jwt.sign(username, process.env.JWT_SECRET);
 }
@@ -28,8 +30,6 @@ module.exports.isAutherize = async (req, res, next) => {
       console.log(error);
       res.status(300).json({ msg: "error"});
   }
-
-  
 }
 
 module.exports.isAuthenticFriend = async (req, res, next) => {
@@ -126,8 +126,10 @@ module.exports.friendNotificationUpdate  = async (req, res, next) => { // to red
         limit: 1
       })
       if(fFriend[0]){
-        fFriend[0].friendship.notification = true; //.........IS THERE BETTER WAY...........
-        await fFriend[0].friendship.save();
+        if (!io.users[req.friend.id]) {
+          fFriend[0].friendship.notification = true; //.........IS THERE BETTER WAY...........
+          await fFriend[0].friendship.save();
+        }
       }
     } else if (req.method == "GET") {
       req.friend.friendship.notification = false;

@@ -3,6 +3,7 @@ const User = require("../models/user");
 const { Op } = require("sequelize");
 const UserGroup = require("../models/userGroup.js");
 const {uploadToAWS } = require("../utils/utils.js");
+const io = require('../utils/socket');
 
 module.exports.getFriendMessages = async (req, res, next) => {
     const { lastId = 0, chatType, convId } = req.query;
@@ -53,20 +54,28 @@ module.exports.getFriendMessages = async (req, res, next) => {
 module.exports.postFriendMessages = async (req, res, next) => {
     const { text, chatType } = req.body;
     if (chatType === "ooo") {
-        
+        let textContent;
         if(req.file){
             const name = `Chat/${Date.now()}___${req.file.originalname}`;
             if(text.trim()!=""){
                 const location = await Promise.all([req.user.createMessage({ msg: text, receiverId: req.friend.id }),uploadToAWS(req.file.buffer,name)]);
-                await req.user.createMessage({ msg: location[1], receiverId: req.friend.id ,isLink:true});
+                textContent = await req.user.createMessage({ msg: location[1], receiverId: req.friend.id ,isLink:true});
             }else{
                 const location = await uploadToAWS(req.file.buffer,name);
-                await req.user.createMessage({ msg: location, receiverId: req.friend.id ,isLink:true});
+                textContent = await req.user.createMessage({ msg: location, receiverId: req.friend.id ,isLink:true});
             }
-            
-            
-        }else if(text.trim()!="") await req.user.createMessage({ msg: text, receiverId: req.friend.id });
-
+                
+        }else if(text.trim()!="") {
+            textContent = await req.user.createMessage({ msg: text, receiverId: req.friend.id });
+        }
+        
+        if(io.users[req.user.id].friends.includes(req.friend.id)){
+            let socket = io.getIo();
+            io.users[req.friend.id] &&socket.to(io.users[req.friend.id].id).emit('message',JSON.stringify({data:{data:[textContent,null]} }));
+            socket.to(io.users[req.user.id].id).emit('message',JSON.stringify({data:{data:[null,textContent]} }));
+        }else{
+            console.log("user is not friend",io.users[req.user.id]);
+        }
         res.status(200).json({ msg: "saved" })
     }
 }
@@ -109,15 +118,18 @@ module.exports.getGroupMessages = async (req, res, next) => {
 
 module.exports.postGroupMessages = async(req,res,next)=>{
     const { text, chatType } = req.body;
+    let  textContent;
     if(req.file){
         const name = `Chats/${Date.now()}___${req.file.originalname}`;
         if(text.trim()!=""){
             const location = await Promise.all([req.user.createMessage({ msg: text, groupId: req.group.id }),uploadToAWS(req.file.buffer,name)]);
-            await req.user.createMessage({ msg: location[1], groupId: req.group.id,isLink:true });
+            textContent =  await req.user.createMessage({ msg: location[1], groupId: req.group.id,isLink:true });
         }else{
             const location = await uploadToAWS(req.file.buffer,name);
-            await req.user.createMessage({ msg: location, groupId: req.group.id ,isLink:true});
+            textContent = await req.user.createMessage({ msg: location, groupId: req.group.id ,isLink:true});
         }
-    }else if(text.trim()!="") await req.user.createMessage({ msg: text, groupId: req.group.id });
+    }else if(text.trim()!="") textContent = await req.user.createMessage({ msg: text, groupId: req.group.id });
+    let socket = io.getIo();
+    socket.to(req.group.id).emit('message', JSON.stringify({data:{data:[null,textContent]} }));
     res.status(200).json({ msg: "saved" })
 }

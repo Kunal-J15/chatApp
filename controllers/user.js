@@ -3,7 +3,7 @@ const User = require("../models/user")
 const { generateAccessToken } = require("../utils/utils")
 const salt = 10;
 const { Op } = require("sequelize");
-
+const io = require("../utils/socket");
 
 module.exports.signup = async (req, res, next) => {
     try {
@@ -25,7 +25,7 @@ module.exports.login = async (req, res, next) => {
         if (user) {
             bcrypt.compare(password, user.password, function (err, result) {
                 if (err) return res.status(301).send("something went Wrong");
-                if (result) res.status(200).json({ msg: "login succeful", id: generateAccessToken(user.id) });
+                if (result) res.status(200).json({ msg: "login succeful", id: generateAccessToken(user.id),id_:user.id });
                 else return res.send(401).json({ msg: "invalid email or password" });
             });
         }
@@ -42,9 +42,10 @@ module.exports.getFriends = async (req, res, next) => {
     const filteredFriends = friends.map(friend => {
         const { friendship, ...filteredFriend } = friend.toJSON();
          filteredFriend.notification = friendship.notification;
+        if(io.users[req.user.id] && !io.users[req.user.id].friends.includes(friend.id)) io.users[req.user.id].friends.push(friend.id);
+        else console.log("issue",io.users,req.user.id);
          return filteredFriend;
       });
-    //console.log(JSON.stringify(friends));    // ..................HOW TO EXCLUDE "friendship" field while querring? 
     res.status(200).json({friends:filteredFriends})
 }
 
@@ -54,6 +55,8 @@ module.exports.postFriends = async (req, res, next) => {
     const friend = await User.findOne({ where: { number } });
     if (friend) {
         await req.user.addFriend(friend.id);
+        const socket = io.getIo();
+        socket.to(io.users[req.user.id].id).emit('friend',true)
         return res.status(200).json({ msg: "success" })
     }
     return res.status(403).json({ msg: "user not found with number" });
@@ -65,7 +68,8 @@ module.exports.getGroups= async (req, res, next) => {
     });
     const filteredGroups = groups.map(friend => {
         const { userGroup, ...filteredGroup } = friend.toJSON();
-        filteredGroup.notification= userGroup.notification;
+        filteredGroup.notification = userGroup.notification;
+        io.users[req.user.id].groups.push(friend.id);
         // filteredGroup.adminId = filteredGroup.adminId===req.user.id;
         return filteredGroup;
     });

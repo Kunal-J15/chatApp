@@ -15,7 +15,8 @@ const Friendship = require('./models/friendship');
 const UserGroup = require('./models/userGroup');
 const ArchiveMessage = require("./models/archiveMessages");
 const job = require("./utils/cronJob");
-
+const jwt = require('jsonwebtoken');
+const { disconnect } = require('process');
 app.use(cors({
     origin:"*",
 }))
@@ -74,11 +75,11 @@ User.belongsToMany(User, {
       as: "sender", 
       foreignKey: "userId"
     }); 
-    Group.hasMany(ArchiveMessage,{onDelete:"CASCADE"});
+  Group.hasMany(ArchiveMessage,{onDelete:"CASCADE"});
     ArchiveMessage.belongsTo(Group);
 
     
-var option //= {force: true}
+var option// = {force: true}
 sequelize.sync(option
 ).then(async()=>{
     if(option){
@@ -88,10 +89,49 @@ sequelize.sync(option
         const user3 = User.build({ name:"c", email:"c@gmail.com", password: hash, number:123456789 });
         const user4 = User.build({ name:"d", email:"d@gmail.com",password: hash,number:01234567});
         await user1.save();await user2.save();await user3.save();await user4.save();
-        const ans2 = await Promise.all([user1.addFriend(user2.id),user1.addFriend(user3.id),user1.addFriend(user4.id),user2.addFriend(user1.id),user3.addFriend(user4.id),user4.addFriend(user3.id)]);
+        const ans2 = await Promise.all([user1.addFriend(user2.id),user1.addFriend(user3.id),user1.addFriend(user4.id),user2.addFriend(user1.id),user3.addFriend(user4.id),user4.addFriend(user3.id),user4.addFriend(user1.id),user3.addFriend(user1.id)]);
     }
-    job.start();
-    app.listen(process.env.PORT,()=>{console.log("listning on 3000");})
+    // job.start();
+    const server = app.listen(process.env.PORT,()=>{console.log("listning on 3000");});
+    const socket = require('./utils/socket');
+    const io = socket.init(server);
+
+    io.on('connection',(s)=>{
+      const token = s.handshake.query.token;
+      if (!token) {
+        s.emit('connection_error', { message: 'Connection rejected' });
+        s.disconnect();
+        return;
+      }else{
+        jwt.verify(s.handshake.query.token,process.env.JWT_SECRET,(err,id)=>{
+          if(!err && id){
+            if(socket.users[id]) socket.users[id].id = s.id;
+            else {
+              socket.users[id] = {
+                id:s.id,
+                friends:[],
+                groups:[]
+              } }
+          }
+          s.on('disconnect',()=>{
+            delete socket.users[id];
+          })
+
+          s.on('joinRoom', (roomName) => {
+            s.join(roomName);
+          });
+          s.on('leaveRoom', (roomName) => {
+            s.leave(roomName);
+          });
+        })
+      }
+
+
+      
+    })
+
+
+
 }).catch((e)=>{
     console.log("error",e);
 })

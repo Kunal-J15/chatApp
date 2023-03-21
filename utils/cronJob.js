@@ -3,7 +3,7 @@ const { Op } = require("sequelize");
 var CronJob = require('cron').CronJob;
 const ArchiveMessage = require("../models/archiveMessages");
 var oldDate = new Date();
-oldDate.setHours(oldDate.getHours()-1);
+oldDate.setDate(oldDate.getDate()-1);
 module.exports = new CronJob(
 	'0 0 1 * * *',
 	async function() {
@@ -15,7 +15,6 @@ module.exports = new CronJob(
       
       }
     })
-    console.log(JSON.stringify(oldMsg));
     Promise.all(oldMsg.map(async (e)=>{
         await e.destroy();
         await ArchiveMessage.create(e.dataValues);

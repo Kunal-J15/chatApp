@@ -1,10 +1,57 @@
-
-function checkLogin() {
+var chatType, convId, conv,socket;
+async function checkLogin() {
     if (!localStorage.getItem("token")) {
         window.location = "/login.html";
+    }else{
+       await new Promise((resolve, reject) => {
+            const token = JSON.parse(localStorage.getItem("token")).id;
+            socket = io('http://localhost:3000',{
+            query: {
+                token
+              }
+            });
+            
+            socket.on("message",(data)=>{
+                // console.log(data);
+                data = JSON.parse(data);
+                // console.log(data);
+                if (data.data.data[0]) {
+                    if(convId === data.data.data[0].userId){
+                        loadData(null,null,data)
+                    }else {
+                        console.log(convId, data.data.data[0].userId);
+                        let noti = JSON.parse(localStorage.getItem("notification"));
+                        if(!noti) noti =[];
+                        if(!noti.includes(data.data.data[0].userId))noti.push(data.data.data[0].userId);
+                        localStorage.setItem("notification",JSON.stringify(noti));
+                        loadNotification();
+                    }
+                }else if(data.data.data[1].groupId && data.data.data[1].userId == JSON.parse(localStorage.getItem('token'))._id ){
+                    data.data.data.unshift(null);
+                }
+                loadData(null,null,data)
+                
+            });
+            socket.on("friend",(data)=>{
+                console.log(data);
+                loadFriendList();
+            })
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                resolve("success");
+              });
+
+        })
+           
+
+        await loadFriendList();
+        await loadGroupList();
+
     }
 }
 checkLogin();
+
+
 
 const chatForm = document.getElementById("chatForm");
 const addFriendForm = document.getElementById("addFriendForm");
@@ -19,11 +66,14 @@ logOut.onclick = () => {
     localStorage.clear();
     checkLogin();
 }
-var chatType, convId, conv;
+
 
 
 const listListner = (e) => {
     if (e.target.id != "list" && convId != e.target.id) {
+        if (chatType=="group") {
+            socket.emit('leaveRoom', convId);
+        }
         chatType = "ooo";
         chatDiv.style = "";
         conv && conv.classList.remove("text-success");
@@ -33,11 +83,14 @@ const listListner = (e) => {
         // console.log(chatType,convId);
         localStorage.removeItem("messages")
         localStorage.removeItem("myMsg")
-
         preData = [];
         preMy = [];
         messages.innerHTML = "";
-        chatNav.innerHTML = ""
+        chatNav.innerHTML = "";
+
+       let noti = JSON.parse(localStorage.getItem("notification"));
+        noti = noti? noti.filter((e)=>e!=convId):[]; 
+        localStorage.setItem("notification",JSON.stringify(noti))
         loadData(e.target);
     }
     // 
@@ -47,13 +100,15 @@ list.addEventListener("click", listListner);
 
 
 gList.addEventListener("click", (e) => {
-    console.log(e.target.id, convId, chatType);
+    // console.log(e.target.id, convId, chatType);
     if (e.target.id != "gList" && convId != e.target.id) {
 
         conv && conv.classList.remove("text-success");
         conv = e.target;
         conv.classList.add("text-success")
-
+        if (chatType=="group") {
+            socket.emit('leaveRoom',convId);
+        }
         messages.innerHTML = ""
         chatDiv.style = "";
         chatType = "group";
@@ -62,6 +117,12 @@ gList.addEventListener("click", (e) => {
         localStorage.removeItem("myMsg")
         preData = [];
         preMy = [];
+
+        socket.emit('joinRoom', convId);
+        let noti = JSON.parse(localStorage.getItem("notification"));
+        noti = noti? noti.filter((e)=>e!=convId):[]; 
+        localStorage.setItem("notification",JSON.stringify(noti))
+        
         loadData(conv, gFirst = true);
     }
     // console.log(e.target.id, convId, chatType);
@@ -73,17 +134,18 @@ if (!preData) preData = [];
 if (!preMy) preMy = [];
 
 
-const intervalId = setInterval(() => {
-    // loadData();
-    loadFriendList();
-    loadGroupList();
-}, 1000);
+// const intervalId = setInterval(() => {
+//     // loadData();
 
-async function loadData(ele, gFirst) {
+// }, 1000);
+
+async function loadData(ele, gFirst,messages) {
     try {
         // console.log(preData,preMy);
-        let messages;
+        
         if (chatType === "ooo") {
+            let noti = localStorage.getItem("notification") ? JSON.parse(localStorage.getItem("notification")):null;
+
             ele && ele.classList.remove("text-danger");
             messages = await axios.get(`/message?lastId=${preData.length && preData[0].id}&&chatType=${chatType}&&convId=${convId}`);
         }
@@ -112,12 +174,13 @@ async function loadData(ele, gFirst) {
 async function loadFriendList() { //........OK..........
     try {
         const friends = await axios.get("/user/friend");
+        localStorage.setItem("friends",JSON.stringify(friends.data.friends));
         list.innerHTML = ""
         for (const friend of friends.data.friends) {
             const li = document.createElement("li");
             li.classList = "nav-item nav-link border border-secondary text-center rounded-pill m-1 friends";
             if (chatType === "ooo" && friend.id == convId) li.classList.add("text-success");
-            if (friend.notification) {
+            if (friend.notification ) {
                 li.classList.add("text-danger");
                 if (chatType === "ooo" && friend.id == convId) loadData(li);
             }
@@ -125,12 +188,22 @@ async function loadFriendList() { //........OK..........
             li.id = friend.id;
             list.appendChild(li);
         }
-
+        loadNotification()
     } catch (error) {
         console.log(error);
     }
 }
-
+async function loadNotification(){
+    let friends =  (localStorage.getItem("friends")) && JSON.parse(localStorage.getItem("friends"));
+    console.log(friends);
+    let noti = localStorage.getItem("notification") ? JSON.parse(localStorage.getItem("notification")):null;
+    for (const friend of friends) {
+        if(( noti && noti.includes(friend.id))){
+            const li = document.getElementById(friend.id);
+            li.classList.add("text-danger");
+        }
+    }
+} 
 async function loadGroupList() {
     try {
         const groups = await axios.get("/user/group");
@@ -329,7 +402,7 @@ chatForm.onsubmit = async (e) => {
                 }
               });
 
-        loadData();
+        // loadData();
     } catch (error) {
         console.log(error.response.data.msg);
         // giveFeed(error.response.data.msg);
